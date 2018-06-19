@@ -1,4 +1,4 @@
-package hex
+package hexit
 
 import "testing"
 

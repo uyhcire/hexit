@@ -1,14 +1,18 @@
-package hex
+package hexit
 
 // Board encoding: 0 = blank, 1 = Player 1, 2 = Player 2
 // First index is the number of rows from the top
 // Second index is the number of columns from the left
 type Board = [5][5]byte
 
-type boardLocation struct {
-	row int
-	col int
+// BoardLocation is a location on a board
+type BoardLocation struct {
+	row uint
+	col uint
 }
+
+// Move that a player can make
+type Move = BoardLocation
 
 // NewBoard creates an empty board
 func NewBoard() Board {
@@ -36,40 +40,40 @@ func PlayMove(board Board, player byte, row uint, col uint) Board {
 	return newBoard
 }
 
-func getAdjacentLocations(location boardLocation) []boardLocation {
-	adjacent := make([]boardLocation, 0)
+func getAdjacentLocations(location BoardLocation) []BoardLocation {
+	adjacent := make([]BoardLocation, 0)
 
 	// Row above
-	adjacent = append(adjacent, boardLocation{
+	adjacent = append(adjacent, BoardLocation{
 		row: location.row - 1,
 		col: location.col,
 	})
-	adjacent = append(adjacent, boardLocation{
+	adjacent = append(adjacent, BoardLocation{
 		row: location.row - 1,
 		col: location.col + 1,
 	})
 
 	// Same row
-	adjacent = append(adjacent, boardLocation{
+	adjacent = append(adjacent, BoardLocation{
 		row: location.row,
 		col: location.col - 1,
 	})
-	adjacent = append(adjacent, boardLocation{
+	adjacent = append(adjacent, BoardLocation{
 		row: location.row,
 		col: location.col + 1,
 	})
 
 	// Next row
-	adjacent = append(adjacent, boardLocation{
+	adjacent = append(adjacent, BoardLocation{
 		row: location.row + 1,
 		col: location.col - 1,
 	})
-	adjacent = append(adjacent, boardLocation{
+	adjacent = append(adjacent, BoardLocation{
 		row: location.row + 1,
 		col: location.col,
 	})
 
-	validAdjacent := make([]boardLocation, 0)
+	validAdjacent := make([]BoardLocation, 0)
 	for _, adjacentLocation := range adjacent {
 		if adjacentLocation.row >= 0 && adjacentLocation.row < 5 && adjacentLocation.col >= 0 && adjacentLocation.col < 5 {
 			validAdjacent = append(validAdjacent, adjacentLocation)
@@ -84,12 +88,12 @@ func didPlayerWin(
 	board Board,
 	player byte,
 	// Side of the board to start looking from
-	startingLocations []boardLocation,
+	startingLocations []BoardLocation,
 	// Is this location on the other side of the board?
-	isLocationWinning func(boardLocation) bool,
+	isLocationWinning func(BoardLocation) bool,
 ) bool {
 	visited := [5][5]bool{}
-	locationQueue := make([]boardLocation, 0)
+	locationQueue := make([]BoardLocation, 0)
 	for _, location := range startingLocations {
 		row := location.row
 		col := location.col
@@ -124,14 +128,14 @@ func PlayerOneWins(board Board) bool {
 	return didPlayerWin(
 		board,
 		1,
-		[]boardLocation{
-			boardLocation{row: 0, col: 0},
-			boardLocation{row: 0, col: 1},
-			boardLocation{row: 0, col: 2},
-			boardLocation{row: 0, col: 3},
-			boardLocation{row: 0, col: 4},
+		[]BoardLocation{
+			BoardLocation{row: 0, col: 0},
+			BoardLocation{row: 0, col: 1},
+			BoardLocation{row: 0, col: 2},
+			BoardLocation{row: 0, col: 3},
+			BoardLocation{row: 0, col: 4},
 		},
-		func(location boardLocation) bool {
+		func(location BoardLocation) bool {
 			return location.row == 4
 		})
 }
@@ -141,14 +145,14 @@ func PlayerTwoWins(board Board) bool {
 	return didPlayerWin(
 		board,
 		2,
-		[]boardLocation{
-			boardLocation{row: 0, col: 0},
-			boardLocation{row: 1, col: 0},
-			boardLocation{row: 2, col: 0},
-			boardLocation{row: 3, col: 0},
-			boardLocation{row: 4, col: 0},
+		[]BoardLocation{
+			BoardLocation{row: 0, col: 0},
+			BoardLocation{row: 1, col: 0},
+			BoardLocation{row: 2, col: 0},
+			BoardLocation{row: 3, col: 0},
+			BoardLocation{row: 4, col: 0},
 		},
-		func(location boardLocation) bool {
+		func(location BoardLocation) bool {
 			return location.col == 4
 		})
 }
