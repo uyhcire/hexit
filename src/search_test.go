@@ -50,7 +50,7 @@ func TestDoVisit(t *testing.T) {
 
 	winningMoveNode := (*SearchNode)(nil)
 	for childNode := tree.rootNode.firstChild; childNode != nil; childNode = childNode.nextSibling {
-		if childNode.move.row == 4 && childNode.move.col == 0 {
+		if childNode.move.Row == 4 && childNode.move.Col == 0 {
 			winningMoveNode = childNode
 		}
 	}
@@ -73,7 +73,7 @@ func TestGetBestMove(t *testing.T) {
 	}
 
 	bestMove := GetBestMove(&tree)
-	if bestMove.row != 4 || bestMove.col != 0 {
+	if bestMove.Row != 4 || bestMove.Col != 0 {
 		t.Error("Failed to find the winning move")
 	}
 }

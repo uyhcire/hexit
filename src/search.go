@@ -61,7 +61,7 @@ func NewSearchTree(board Board, player byte) SearchTree {
 		panic("Can't search from a terminal node")
 	}
 
-	rootNode := NewSearchNode(nil, Move{row: 1000, col: 1000}, player)
+	rootNode := NewSearchNode(nil, Move{Row: 1000, Col: 1000}, player)
 	searchTree := SearchTree{
 		board:    board,
 		rootNode: &rootNode,
@@ -83,16 +83,6 @@ func EvaluatePosition(board Board) (float32, [5][5]float32) {
 	return valueEstimate, policyEstimates
 }
 
-func otherPlayer(player byte) byte {
-	if player == 1 {
-		return 2
-	} else if player == 2 {
-		return 1
-	} else {
-		panic("Invalid player")
-	}
-}
-
 // EvaluateAtNode evaluates the NN at a single node.
 func EvaluateAtNode(node *SearchNode, board Board) {
 	if node.isTerminal {
@@ -111,7 +101,7 @@ func EvaluateAtNode(node *SearchNode, board Board) {
 				continue
 			}
 			totalLegalPolicy += policyEstimates[i][j]
-			childNode := NewSearchNode(node, Move{row: uint(i), col: uint(j)}, otherPlayer(node.player))
+			childNode := NewSearchNode(node, Move{Row: uint(i), Col: uint(j)}, OtherPlayer(node.player))
 			childNode.p = policyEstimates[i][j]
 			childNode.nextSibling = firstChildNode
 			firstChildNode = &childNode
@@ -164,9 +154,9 @@ func DoVisit(tree *SearchTree) {
 		currentBoard = PlayMove(
 			currentBoard,
 			// Previous player
-			otherPlayer(currentNode.player),
-			bestCandidateNode.move.row,
-			bestCandidateNode.move.col)
+			OtherPlayer(currentNode.player),
+			bestCandidateNode.move.Row,
+			bestCandidateNode.move.Col)
 	}
 
 	// Expand the selected leaf node

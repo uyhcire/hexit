@@ -7,12 +7,23 @@ type Board = [5][5]byte
 
 // BoardLocation is a location on a board
 type BoardLocation struct {
-	row uint
-	col uint
+	Row uint
+	Col uint
 }
 
 // Move that a player can make
 type Move = BoardLocation
+
+// OtherPlayer returns the other player
+func OtherPlayer(player byte) byte {
+	if player == 1 {
+		return 2
+	} else if player == 2 {
+		return 1
+	} else {
+		panic("Invalid player")
+	}
+}
 
 // NewBoard creates an empty board
 func NewBoard() Board {
@@ -45,37 +56,37 @@ func getAdjacentLocations(location BoardLocation) []BoardLocation {
 
 	// Row above
 	adjacent = append(adjacent, BoardLocation{
-		row: location.row - 1,
-		col: location.col,
+		Row: location.Row - 1,
+		Col: location.Col,
 	})
 	adjacent = append(adjacent, BoardLocation{
-		row: location.row - 1,
-		col: location.col + 1,
+		Row: location.Row - 1,
+		Col: location.Col + 1,
 	})
 
 	// Same row
 	adjacent = append(adjacent, BoardLocation{
-		row: location.row,
-		col: location.col - 1,
+		Row: location.Row,
+		Col: location.Col - 1,
 	})
 	adjacent = append(adjacent, BoardLocation{
-		row: location.row,
-		col: location.col + 1,
+		Row: location.Row,
+		Col: location.Col + 1,
 	})
 
 	// Next row
 	adjacent = append(adjacent, BoardLocation{
-		row: location.row + 1,
-		col: location.col - 1,
+		Row: location.Row + 1,
+		Col: location.Col - 1,
 	})
 	adjacent = append(adjacent, BoardLocation{
-		row: location.row + 1,
-		col: location.col,
+		Row: location.Row + 1,
+		Col: location.Col,
 	})
 
 	validAdjacent := make([]BoardLocation, 0)
 	for _, adjacentLocation := range adjacent {
-		if adjacentLocation.row >= 0 && adjacentLocation.row < 5 && adjacentLocation.col >= 0 && adjacentLocation.col < 5 {
+		if adjacentLocation.Row >= 0 && adjacentLocation.Row < 5 && adjacentLocation.Col >= 0 && adjacentLocation.Col < 5 {
 			validAdjacent = append(validAdjacent, adjacentLocation)
 		}
 	}
@@ -95,8 +106,8 @@ func didPlayerWin(
 	visited := [5][5]bool{}
 	locationQueue := make([]BoardLocation, 0)
 	for _, location := range startingLocations {
-		row := location.row
-		col := location.col
+		row := location.Row
+		col := location.Col
 		if board[row][col] == player {
 			locationQueue = append(locationQueue, location)
 			visited[row][col] = true
@@ -107,14 +118,14 @@ func didPlayerWin(
 		location := locationQueue[0]
 		locationQueue = locationQueue[1:]
 		for _, adjacentLocation := range getAdjacentLocations(location) {
-			if board[adjacentLocation.row][adjacentLocation.col] != player {
+			if board[adjacentLocation.Row][adjacentLocation.Col] != player {
 				continue
 			}
 			if isLocationWinning(adjacentLocation) {
 				return true
 			}
-			if !visited[adjacentLocation.row][adjacentLocation.col] {
-				visited[adjacentLocation.row][adjacentLocation.col] = true
+			if !visited[adjacentLocation.Row][adjacentLocation.Col] {
+				visited[adjacentLocation.Row][adjacentLocation.Col] = true
 				locationQueue = append(locationQueue, adjacentLocation)
 			}
 		}
@@ -129,14 +140,14 @@ func PlayerOneWins(board Board) bool {
 		board,
 		1,
 		[]BoardLocation{
-			BoardLocation{row: 0, col: 0},
-			BoardLocation{row: 0, col: 1},
-			BoardLocation{row: 0, col: 2},
-			BoardLocation{row: 0, col: 3},
-			BoardLocation{row: 0, col: 4},
+			BoardLocation{Row: 0, Col: 0},
+			BoardLocation{Row: 0, Col: 1},
+			BoardLocation{Row: 0, Col: 2},
+			BoardLocation{Row: 0, Col: 3},
+			BoardLocation{Row: 0, Col: 4},
 		},
 		func(location BoardLocation) bool {
-			return location.row == 4
+			return location.Row == 4
 		})
 }
 
@@ -146,14 +157,14 @@ func PlayerTwoWins(board Board) bool {
 		board,
 		2,
 		[]BoardLocation{
-			BoardLocation{row: 0, col: 0},
-			BoardLocation{row: 1, col: 0},
-			BoardLocation{row: 2, col: 0},
-			BoardLocation{row: 3, col: 0},
-			BoardLocation{row: 4, col: 0},
+			BoardLocation{Row: 0, Col: 0},
+			BoardLocation{Row: 1, Col: 0},
+			BoardLocation{Row: 2, Col: 0},
+			BoardLocation{Row: 3, Col: 0},
+			BoardLocation{Row: 4, Col: 0},
 		},
 		func(location BoardLocation) bool {
-			return location.col == 4
+			return location.Col == 4
 		})
 }
 
