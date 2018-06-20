@@ -62,7 +62,7 @@ func TestDoVisit(t *testing.T) {
 	}
 }
 
-func TestGetBestMove(t *testing.T) {
+func TestGetBestMovePlayerOne(t *testing.T) {
 	almostWonBoard := getAlmostWonBoard()
 
 	rand.Seed(1)
@@ -74,6 +74,26 @@ func TestGetBestMove(t *testing.T) {
 
 	bestMove := GetBestMove(&tree)
 	if bestMove.Row != 4 || bestMove.Col != 0 {
+		t.Error("Failed to find the winning move")
+	}
+}
+
+func TestGetBestMovePlayerTwo(t *testing.T) {
+	almostWonBoard := NewBoard()
+	almostWonBoard = PlayMove(almostWonBoard, 2, 0, 0)
+	almostWonBoard = PlayMove(almostWonBoard, 2, 0, 1)
+	almostWonBoard = PlayMove(almostWonBoard, 2, 0, 2)
+	almostWonBoard = PlayMove(almostWonBoard, 2, 0, 3)
+
+	rand.Seed(1)
+
+	tree := NewSearchTree(almostWonBoard, 2)
+	for i := 0; i < 1000; i++ {
+		DoVisit(&tree)
+	}
+
+	bestMove := GetBestMove(&tree)
+	if bestMove.Row != 0 || bestMove.Col != 4 {
 		t.Error("Failed to find the winning move")
 	}
 }

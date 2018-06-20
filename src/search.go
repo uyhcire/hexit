@@ -163,13 +163,7 @@ func DoVisit(tree *SearchTree) {
 	winner := GetWinner(currentBoard)
 	if winner != 0 {
 		currentNode.isTerminal = true
-		if winner == 1 {
-			currentNode.v = 1
-		} else if winner == 2 {
-			currentNode.v = -1
-		} else {
-			panic("Invalid player")
-		}
+		currentNode.v = 1
 	} else {
 		EvaluateAtNode(currentNode, currentBoard)
 	}
