@@ -1,5 +1,9 @@
 package hexit
 
+import (
+	"fmt"
+)
+
 // Board encoding: 0 = blank, 1 = Player 1, 2 = Player 2
 // First index is the number of rows from the top
 // Second index is the number of columns from the left
@@ -13,6 +17,52 @@ type BoardLocation struct {
 
 // Move that a player can make
 type Move = BoardLocation
+
+func formatBoardSquare(boardSquareValue byte) string {
+	if boardSquareValue == 1 {
+		return "X"
+	} else if boardSquareValue == 2 {
+		return "O"
+	} else {
+		return "-"
+	}
+}
+
+// PrintBoard prints the board to the console
+func PrintBoard(board *Board) {
+	fmt.Printf(
+		"%s %s %s %s %s\n"+
+			" %s %s %s %s %s\n"+
+			"  %s %s %s %s %s\n"+
+			"   %s %s %s %s %s\n"+
+			"    %s %s %s %s %s\n",
+		formatBoardSquare(board[0][0]),
+		formatBoardSquare(board[0][1]),
+		formatBoardSquare(board[0][2]),
+		formatBoardSquare(board[0][3]),
+		formatBoardSquare(board[0][4]),
+		formatBoardSquare(board[1][0]),
+		formatBoardSquare(board[1][1]),
+		formatBoardSquare(board[1][2]),
+		formatBoardSquare(board[1][3]),
+		formatBoardSquare(board[1][4]),
+		formatBoardSquare(board[2][0]),
+		formatBoardSquare(board[2][1]),
+		formatBoardSquare(board[2][2]),
+		formatBoardSquare(board[2][3]),
+		formatBoardSquare(board[2][4]),
+		formatBoardSquare(board[3][0]),
+		formatBoardSquare(board[3][1]),
+		formatBoardSquare(board[3][2]),
+		formatBoardSquare(board[3][3]),
+		formatBoardSquare(board[3][4]),
+		formatBoardSquare(board[4][0]),
+		formatBoardSquare(board[4][1]),
+		formatBoardSquare(board[4][2]),
+		formatBoardSquare(board[4][3]),
+		formatBoardSquare(board[4][4]),
+	)
+}
 
 // OtherPlayer returns the other player
 func OtherPlayer(player byte) byte {
