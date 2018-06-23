@@ -197,3 +197,22 @@ func GetBestMove(tree *SearchTree) Move {
 	}
 	return *bestMove
 }
+
+// GetMoveWithTemperatureOne picks a move using a "temperature" of 1.0
+// The probability a move is picked is proportional to the number of visits.
+func GetMoveWithTemperatureOne(tree *SearchTree) Move {
+	totalVisits := 0
+	for childNode := tree.rootNode.firstChild; childNode != nil; childNode = childNode.nextSibling {
+		totalVisits += int(childNode.n)
+	}
+
+	randInt := rand.Intn(totalVisits)
+	cumulativeVisits := 0
+	for childNode := tree.rootNode.firstChild; childNode != nil; childNode = childNode.nextSibling {
+		cumulativeVisits += int(childNode.n)
+		if randInt <= cumulativeVisits {
+			return childNode.move
+		}
+	}
+	panic("Expected to pick a move")
+}

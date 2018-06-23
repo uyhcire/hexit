@@ -15,7 +15,7 @@ func getSelfPlayMove(board hexit.Board, player byte) hexit.Move {
 	for i := 0; i < numVisits; i++ {
 		hexit.DoVisit(&tree)
 	}
-	bestMove := hexit.GetBestMove(&tree)
+	bestMove := hexit.GetMoveWithTemperatureOne(&tree)
 	return bestMove
 }
 
