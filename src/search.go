@@ -3,6 +3,8 @@ package hexit
 import (
 	"math"
 	"math/rand"
+
+	"gonum.org/v1/gonum/stat/distuv"
 )
 
 // SearchNode is a node in a search tree
@@ -68,6 +70,30 @@ func NewSearchTree(board Board, player byte) SearchTree {
 	}
 	EvaluateAtNode(searchTree.rootNode, board)
 	return searchTree
+}
+
+// ApplyDirichletNoise applies noise to the root node's policy estimates
+func ApplyDirichletNoise(newSearchTree *SearchTree) {
+	epsilon := float32(0.25)
+	alpha := 0.3
+	gammaDistribution := distuv.Gamma{Alpha: alpha, Beta: 1.0}
+
+	totalNoise := float32(0)
+	noiseVector := make([]float32, 0)
+	for childNode := newSearchTree.rootNode.firstChild; childNode != nil; childNode = childNode.nextSibling {
+		noise := float32(gammaDistribution.Rand())
+		noiseVector = append(noiseVector, noise)
+		totalNoise += noise
+	}
+	for i := range noiseVector {
+		noiseVector[i] /= totalNoise
+	}
+
+	i := 0
+	for childNode := newSearchTree.rootNode.firstChild; childNode != nil; childNode = childNode.nextSibling {
+		childNode.p = (1-epsilon)*childNode.p + epsilon*noiseVector[i]
+		i++
+	}
 }
 
 // EvaluatePosition returns the NN's value and policy estimates for a position.

@@ -12,6 +12,7 @@ var numVisits = 800
 
 func getSelfPlayMove(board hexit.Board, player byte) hexit.Move {
 	tree := hexit.NewSearchTree(board, player)
+	hexit.ApplyDirichletNoise(&tree)
 	for i := 0; i < numVisits; i++ {
 		hexit.DoVisit(&tree)
 	}
