@@ -94,3 +94,60 @@ func TestGetWinnerEmptyBoard(t *testing.T) {
 		t.Error("The game just started, there's no winner yet!")
 	}
 }
+
+// Suppose Player 1 sees this board:
+//
+// X - O - O
+//  X O - - X
+//   O - - X -
+//    - - - - -
+//     - - X O X
+//
+// Then Player 2 should see this board:
+//
+// O O X - -
+//  - X - - -
+//   X - - - O
+//    - - O - X
+//     X O - - O
+//
+// See training_game.proto for a more detailed explanation
+func TestFlipBoardForTrainingData(t *testing.T) {
+	board := NewBoard()
+	board = PlayMove(board, 1, 0, 0)
+	board = PlayMove(board, 2, 0, 2)
+	board = PlayMove(board, 2, 0, 4)
+	board = PlayMove(board, 1, 1, 0)
+	board = PlayMove(board, 2, 1, 1)
+	board = PlayMove(board, 1, 1, 4)
+	board = PlayMove(board, 2, 2, 0)
+	board = PlayMove(board, 1, 2, 3)
+	board = PlayMove(board, 1, 4, 2)
+	board = PlayMove(board, 2, 4, 3)
+	board = PlayMove(board, 1, 4, 4)
+
+	expectedBoard := NewBoard()
+	expectedBoard = PlayMove(expectedBoard, 2, 0, 0)
+	expectedBoard = PlayMove(expectedBoard, 2, 0, 1)
+	expectedBoard = PlayMove(expectedBoard, 1, 0, 2)
+	expectedBoard = PlayMove(expectedBoard, 1, 1, 1)
+	expectedBoard = PlayMove(expectedBoard, 1, 2, 0)
+	expectedBoard = PlayMove(expectedBoard, 2, 2, 4)
+	expectedBoard = PlayMove(expectedBoard, 2, 3, 2)
+	expectedBoard = PlayMove(expectedBoard, 1, 3, 4)
+	expectedBoard = PlayMove(expectedBoard, 1, 4, 0)
+	expectedBoard = PlayMove(expectedBoard, 2, 4, 1)
+	expectedBoard = PlayMove(expectedBoard, 2, 4, 4)
+
+	flippedBoard := FlipBoardForTrainingData(board, 2)
+	for i := 0; i < 5; i++ {
+		for j := 0; j < 5; j++ {
+			if flippedBoard[i][j] != expectedBoard[i][j] {
+				t.Errorf(
+					"Expected position (%d, %d) to have value %d but got %d\n",
+					i, j, expectedBoard[i][j], flippedBoard[i][j],
+				)
+			}
+		}
+	}
+}
