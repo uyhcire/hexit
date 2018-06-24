@@ -1,0 +1,53 @@
+syntax = "proto3";
+package hexit;
+
+// For each move in a training game, we record:
+//
+//   (1) The state of the board before the move
+//   (2) How many visits each move had. Illegal moves should have 0 vists.
+//   (3) The ultimate winner of the game
+//
+// For Player 1, the board squares are ordered (0, 0), (0, 1), ... (1, 0), ...,
+// and the goal is to connect row 0 with row 4.
+//
+// For Player 2, we exploit the board's symmetry to make it look like Player 1's move.
+// The board is rotated 90 degrees counterclockwise and flipped, so that the squares
+// are ordered (0, 0), (1, 0), ..., (0, 1), ...
+//
+// Instead of encoding board squares as occupied by Player 1 or Player 2,
+// squares are occupied by either "myself" or "the other player".
+// Similarly, the game's winner is recorded as either myself or the other player.
+// 
+// Suppose Player 1 sees this board:
+//
+// X - O - O
+//  X O - - X
+//   O - - X -
+//    - - - - -
+//     - - X O X
+//
+// Then Player 2 should see this board:
+//
+// O O X - -
+//  - X - - -
+//   X - - - O
+//    - - O - X
+//     X O - - O
+ 
+message TrainingGame {
+  enum Player {
+    MYSELF = 0;
+    OTHER_PLAYER = 1;
+  }
+
+  message MoveSnapshot {
+    repeated float normalizedVisitCounts = 1 [packed = true];
+    Player winner = 2;
+    // 25 floats, one per board square.
+    // 1.0 if occupied, 0.0 if not 
+    repeated float squaresOccupiedByMyself = 3 [packed = true];
+    repeated float squaresOccupiedByOtherPlayer = 4 [packed = true];
+  }
+
+  repeated MoveSnapshot moveSnapshots = 1;
+}

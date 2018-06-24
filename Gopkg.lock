@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/golang/protobuf"
+  packages = ["proto"]
+  revision = "b4deda0973fb4c70b50d226b1af49f3da59f5265"
+  version = "v1.1.0"
+
+[[projects]]
   branch = "master"
   name = "golang.org/x/exp"
   packages = ["rand"]
@@ -35,6 +41,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "e069d8784e4c5f32a6f645482595ab370fe38c62b6860a3339378cf9f5c8a9d4"
+  inputs-digest = "68234f486c6e630eba941ef7abc7c53d3bdc734a64ed01a7705d7678bd5c3cb6"
   solver-name = "gps-cdcl"
   solver-version = 1

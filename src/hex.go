@@ -228,3 +228,39 @@ func GetWinner(board Board) byte {
 		return 0
 	}
 }
+
+func FlipBoardForTrainingData(board Board, player byte) Board {
+	if player == 1 {
+		return board
+	}
+
+	flippedBoard := NewBoard()
+	for i := 0; i < 5; i++ {
+		for j := 0; j < 5; j++ {
+			originalBoardSquare := board[i][j]
+			if originalBoardSquare != 0 {
+				flippedBoard[j][i] = OtherPlayer(originalBoardSquare)
+			} else {
+				flippedBoard[j][i] = 0
+			}
+		}
+	}
+	return flippedBoard
+}
+
+func WriteBoardToMoveSnapshot(moveSnapshot *TrainingGame_MoveSnapshot, board Board, player byte) {
+	board = FlipBoardForTrainingData(board, player)
+	moveSnapshot.SquaresOccupiedByMyself = make([]float32, 5*5)
+	moveSnapshot.SquaresOccupiedByOtherPlayer = make([]float32, 5*5)
+	for i := 0; i < 5; i++ {
+		for j := 0; j < 5; j++ {
+			boardSquareIndex := i*5 + j
+			if board[i][j] == 1 {
+				moveSnapshot.SquaresOccupiedByMyself[boardSquareIndex] = 1.0
+			}
+			if board[i][j] == 2 {
+				moveSnapshot.SquaresOccupiedByOtherPlayer[boardSquareIndex] = 1.0
+			}
+		}
+	}
+}
