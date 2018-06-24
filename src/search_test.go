@@ -28,18 +28,14 @@ func TestNumLegalMoves(t *testing.T) {
 	}
 }
 
-// getAlmostWonBoard returns a board where Player 1 can win by playing at (4, 0).
-func getAlmostWonBoard() Board {
-	almostWonBoard := NewBoard()
-	almostWonBoard = PlayMove(almostWonBoard, 1, 0, 0)
-	almostWonBoard = PlayMove(almostWonBoard, 1, 1, 0)
-	almostWonBoard = PlayMove(almostWonBoard, 1, 2, 0)
-	almostWonBoard = PlayMove(almostWonBoard, 1, 3, 0)
-	return almostWonBoard
-}
-
 func TestDoVisit(t *testing.T) {
-	almostWonBoard := getAlmostWonBoard()
+	almostWonBoard := [5][5]byte{
+		[5]byte{1, 0, 0, 0, 0},
+		[5]byte{1, 0, 0, 0, 0},
+		[5]byte{1, 0, 0, 0, 0},
+		[5]byte{1, 0, 0, 0, 0},
+		[5]byte{0, 0, 0, 0, 0},
+	}
 
 	rand.Seed(1)
 
@@ -63,7 +59,13 @@ func TestDoVisit(t *testing.T) {
 }
 
 func TestGetBestMovePlayerOne(t *testing.T) {
-	almostWonBoard := getAlmostWonBoard()
+	almostWonBoard := [5][5]byte{
+		[5]byte{1, 0, 0, 0, 0},
+		[5]byte{1, 0, 0, 0, 0},
+		[5]byte{1, 0, 0, 0, 0},
+		[5]byte{1, 0, 0, 0, 0},
+		[5]byte{0, 0, 0, 0, 0},
+	}
 
 	rand.Seed(1)
 
@@ -79,11 +81,13 @@ func TestGetBestMovePlayerOne(t *testing.T) {
 }
 
 func TestGetBestMovePlayerTwo(t *testing.T) {
-	almostWonBoard := NewBoard()
-	almostWonBoard = PlayMove(almostWonBoard, 2, 0, 0)
-	almostWonBoard = PlayMove(almostWonBoard, 2, 0, 1)
-	almostWonBoard = PlayMove(almostWonBoard, 2, 0, 2)
-	almostWonBoard = PlayMove(almostWonBoard, 2, 0, 3)
+	almostWonBoard := [5][5]byte{
+		[5]byte{2, 2, 2, 2, 0},
+		[5]byte{0, 0, 0, 0, 0},
+		[5]byte{0, 0, 0, 0, 0},
+		[5]byte{0, 0, 0, 0, 0},
+		[5]byte{0, 0, 0, 0, 0},
+	}
 
 	rand.Seed(1)
 
