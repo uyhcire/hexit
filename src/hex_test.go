@@ -25,11 +25,13 @@ func TestPlayMove(t *testing.T) {
      X - - - -
 */
 func TestPlayerOneWins(t *testing.T) {
-	board := NewBoard()
-	board = PlayMove(board, 1, 0, 0)
-	board = PlayMove(board, 1, 1, 0)
-	board = PlayMove(board, 1, 2, 0)
-	board = PlayMove(board, 1, 3, 0)
+	board := [5][5]byte{
+		[5]byte{1, 0, 0, 0, 0},
+		[5]byte{1, 0, 0, 0, 0},
+		[5]byte{1, 0, 0, 0, 0},
+		[5]byte{1, 0, 0, 0, 0},
+		[5]byte{0, 0, 0, 0, 0},
+	}
 	if PlayerOneWins(board) {
 		t.Error("Player 1 hasn't won yet!")
 	}
@@ -47,16 +49,13 @@ func TestPlayerOneWins(t *testing.T) {
      - - - X -
 */
 func TestPlayerOneWinsWithWindingPath(t *testing.T) {
-	board := NewBoard()
-	board = PlayMove(board, 1, 0, 0)
-	board = PlayMove(board, 1, 1, 0)
-	board = PlayMove(board, 1, 2, 0)
-	board = PlayMove(board, 1, 2, 1)
-	board = PlayMove(board, 1, 1, 2)
-	board = PlayMove(board, 1, 1, 3)
-	board = PlayMove(board, 1, 1, 4)
-	board = PlayMove(board, 1, 2, 4)
-	board = PlayMove(board, 1, 3, 3)
+	board := [5][5]byte{
+		[5]byte{1, 0, 0, 0, 0},
+		[5]byte{1, 0, 1, 1, 1},
+		[5]byte{1, 1, 0, 0, 1},
+		[5]byte{0, 0, 0, 1, 0},
+		[5]byte{0, 0, 0, 0, 0},
+	}
 	if PlayerOneWins(board) {
 		t.Error("Player 1 hasn't won yet!")
 	}
@@ -74,11 +73,13 @@ func TestPlayerOneWinsWithWindingPath(t *testing.T) {
      - - - - -
 */
 func TestPlayerTwoWins(t *testing.T) {
-	board := NewBoard()
-	board = PlayMove(board, 2, 0, 0)
-	board = PlayMove(board, 2, 0, 1)
-	board = PlayMove(board, 2, 0, 2)
-	board = PlayMove(board, 2, 0, 3)
+	board := [5][5]byte{
+		[5]byte{2, 2, 2, 2, 0},
+		[5]byte{0, 0, 0, 0, 0},
+		[5]byte{0, 0, 0, 0, 0},
+		[5]byte{0, 0, 0, 0, 0},
+		[5]byte{0, 0, 0, 0, 0},
+	}
 	if PlayerTwoWins(board) {
 		t.Error("Player 2 hasn't won yet!")
 	}
@@ -113,31 +114,21 @@ func TestGetWinnerEmptyBoard(t *testing.T) {
 //
 // See training_game.proto for a more detailed explanation
 func TestFlipBoardForTrainingData(t *testing.T) {
-	board := NewBoard()
-	board = PlayMove(board, 1, 0, 0)
-	board = PlayMove(board, 2, 0, 2)
-	board = PlayMove(board, 2, 0, 4)
-	board = PlayMove(board, 1, 1, 0)
-	board = PlayMove(board, 2, 1, 1)
-	board = PlayMove(board, 1, 1, 4)
-	board = PlayMove(board, 2, 2, 0)
-	board = PlayMove(board, 1, 2, 3)
-	board = PlayMove(board, 1, 4, 2)
-	board = PlayMove(board, 2, 4, 3)
-	board = PlayMove(board, 1, 4, 4)
+	board := [5][5]byte{
+		[5]byte{1, 0, 2, 0, 2},
+		[5]byte{1, 2, 0, 0, 1},
+		[5]byte{2, 0, 0, 1, 0},
+		[5]byte{0, 0, 0, 0, 0},
+		[5]byte{0, 0, 1, 2, 1},
+	}
 
-	expectedBoard := NewBoard()
-	expectedBoard = PlayMove(expectedBoard, 2, 0, 0)
-	expectedBoard = PlayMove(expectedBoard, 2, 0, 1)
-	expectedBoard = PlayMove(expectedBoard, 1, 0, 2)
-	expectedBoard = PlayMove(expectedBoard, 1, 1, 1)
-	expectedBoard = PlayMove(expectedBoard, 1, 2, 0)
-	expectedBoard = PlayMove(expectedBoard, 2, 2, 4)
-	expectedBoard = PlayMove(expectedBoard, 2, 3, 2)
-	expectedBoard = PlayMove(expectedBoard, 1, 3, 4)
-	expectedBoard = PlayMove(expectedBoard, 1, 4, 0)
-	expectedBoard = PlayMove(expectedBoard, 2, 4, 1)
-	expectedBoard = PlayMove(expectedBoard, 2, 4, 4)
+	expectedBoard := [5][5]byte{
+		[5]byte{2, 2, 1, 0, 0},
+		[5]byte{0, 1, 0, 0, 0},
+		[5]byte{1, 0, 0, 0, 2},
+		[5]byte{0, 0, 2, 0, 1},
+		[5]byte{1, 2, 0, 0, 2},
+	}
 
 	flippedBoard := FlipBoardForTrainingData(board, 2)
 	for i := 0; i < 5; i++ {
