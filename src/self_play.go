@@ -1,7 +1,6 @@
 package hexit
 
 import (
-	"fmt"
 	"math/rand"
 	"os"
 	"path/filepath"
@@ -12,7 +11,7 @@ import (
 
 var numVisits = 800
 
-func PlaySelfPlayGame() {
+func PlaySelfPlayGame(outputFilename string) {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	board := NewBoard()
@@ -21,8 +20,6 @@ func PlaySelfPlayGame() {
 	moveSnapshots := make([]*TrainingGame_MoveSnapshot, 0)
 
 	for GetWinner(board) == 0 {
-		fmt.Println("")
-
 		moveSnapshot := TrainingGame_MoveSnapshot{
 			//TODO:serialize visit counts
 			NormalizedVisitCounts:        nil,
@@ -54,7 +51,6 @@ func PlaySelfPlayGame() {
 		moveSnapshots = append(moveSnapshots, &moveSnapshot)
 
 		player = OtherPlayer(player)
-		PrintBoard(&board)
 	}
 
 	winner := GetWinner(board)
@@ -82,7 +78,7 @@ func PlaySelfPlayGame() {
 		panic(err)
 	}
 
-	f, err := os.Create("training_games/training_game.dat")
+	f, err := os.Create(filepath.Join(".", "training_games", outputFilename))
 	if err != nil {
 		panic(err)
 	}
@@ -92,6 +88,4 @@ func PlaySelfPlayGame() {
 	if err != nil {
 		panic(err)
 	}
-
-	fmt.Printf("Player %d wins!\n", winner)
 }

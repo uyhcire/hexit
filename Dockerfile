@@ -14,11 +14,3 @@ RUN apt-get update && apt-get install -y python3-pip python3-dev python-setuptoo
 RUN easy_install -U pip
 RUN pip3 install --upgrade tensorflow
 RUN pip3 install ipython
-
-WORKDIR /go/src/github.com/uyhcire/hexit
-COPY Gopkg.toml Gopkg.lock ./
-RUN dep ensure -vendor-only
-COPY src ./src
-RUN go build src/cmd/self_play/self_play.go
-
-COPY neural ./neural

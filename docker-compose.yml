@@ -1,0 +1,12 @@
+version: "3"
+services:
+  hexit:
+    build: .
+    volumes:
+      - .:/go/src/github.com/uyhcire/hexit
+    environment:
+      GOBIN: /go/bin
+    stdin_open: true
+    tty: true
+    command: /bin/bash
+    working_dir: /go/src/github.com/uyhcire/hexit
