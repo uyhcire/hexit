@@ -58,6 +58,10 @@ def main():
         [inputs], [policy_targets, value_targets], 
         epochs=10, batch_size=100, validation_split=0.1)
 
+    builder = tf.saved_model.builder.SavedModelBuilder('hexit_saved_model')
+    builder.add_meta_graph_and_variables(session, ['serve'])
+    builder.save()
+
 
 if __name__ == '__main__':
     main()

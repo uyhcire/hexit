@@ -248,19 +248,20 @@ func FlipBoardForTrainingData(board Board, player byte) Board {
 	return flippedBoard
 }
 
-func WriteBoardToMoveSnapshot(moveSnapshot *TrainingGame_MoveSnapshot, board Board, player byte) {
+func GetOccupiedSquaresForNN(board Board, player byte) ([]float32, []float32) {
 	board = FlipBoardForTrainingData(board, player)
-	moveSnapshot.SquaresOccupiedByMyself = make([]float32, 5*5)
-	moveSnapshot.SquaresOccupiedByOtherPlayer = make([]float32, 5*5)
+	squaresOccupiedByMyself := make([]float32, 5*5)
+	squaresOccupiedByOtherPlayer := make([]float32, 5*5)
 	for i := 0; i < 5; i++ {
 		for j := 0; j < 5; j++ {
 			boardSquareIndex := i*5 + j
 			if board[i][j] == 1 {
-				moveSnapshot.SquaresOccupiedByMyself[boardSquareIndex] = 1.0
+				squaresOccupiedByMyself[boardSquareIndex] = 1.0
 			}
 			if board[i][j] == 2 {
-				moveSnapshot.SquaresOccupiedByOtherPlayer[boardSquareIndex] = 1.0
+				squaresOccupiedByOtherPlayer[boardSquareIndex] = 1.0
 			}
 		}
 	}
+	return squaresOccupiedByMyself, squaresOccupiedByOtherPlayer
 }

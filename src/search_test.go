@@ -7,7 +7,7 @@ import (
 
 func TestNewSearchTree(t *testing.T) {
 	board := NewBoard()
-	tree := NewSearchTree(board, 1)
+	tree := NewSearchTree(EvaluatePositionRandomly, board, 1)
 	if tree.rootNode.firstChild == nil {
 		t.Error("Root node should have children attached!")
 	}
@@ -16,7 +16,7 @@ func TestNewSearchTree(t *testing.T) {
 func TestNumLegalMoves(t *testing.T) {
 	board := NewBoard()
 	board = PlayMove(board, 1, 0, 0)
-	tree := NewSearchTree(board, 2)
+	tree := NewSearchTree(EvaluatePositionRandomly, board, 2)
 
 	numLegalMoves := 0
 	for childNode := tree.rootNode.firstChild; childNode != nil; childNode = childNode.nextSibling {
@@ -39,9 +39,9 @@ func TestDoVisit(t *testing.T) {
 
 	rand.Seed(1)
 
-	tree := NewSearchTree(almostWonBoard, 1)
+	tree := NewSearchTree(EvaluatePositionRandomly, almostWonBoard, 1)
 	for i := 0; i < 1000; i++ {
-		DoVisit(&tree)
+		DoVisit(&tree, EvaluatePositionRandomly)
 	}
 
 	winningMoveNode := (*SearchNode)(nil)
@@ -69,9 +69,9 @@ func TestGetBestMovePlayerOne(t *testing.T) {
 
 	rand.Seed(1)
 
-	tree := NewSearchTree(almostWonBoard, 1)
+	tree := NewSearchTree(EvaluatePositionRandomly, almostWonBoard, 1)
 	for i := 0; i < 1000; i++ {
-		DoVisit(&tree)
+		DoVisit(&tree, EvaluatePositionRandomly)
 	}
 
 	bestMove := GetBestMove(&tree)
@@ -91,9 +91,9 @@ func TestGetBestMovePlayerTwo(t *testing.T) {
 
 	rand.Seed(1)
 
-	tree := NewSearchTree(almostWonBoard, 2)
+	tree := NewSearchTree(EvaluatePositionRandomly, almostWonBoard, 2)
 	for i := 0; i < 1000; i++ {
-		DoVisit(&tree)
+		DoVisit(&tree, EvaluatePositionRandomly)
 	}
 
 	bestMove := GetBestMove(&tree)

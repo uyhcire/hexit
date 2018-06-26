@@ -20,19 +20,18 @@ func PlaySelfPlayGame(outputFilename string) {
 	moveSnapshots := make([]*TrainingGame_MoveSnapshot, 0)
 
 	for GetWinner(board) == 0 {
+		squaresOccupiedByMyself, squaresOccupiedByOtherPlayer := GetOccupiedSquaresForNN(board, player)
 		moveSnapshot := TrainingGame_MoveSnapshot{
-			//TODO:serialize visit counts
 			NormalizedVisitCounts:        nil,
 			Winner:                       TrainingGame_MYSELF,
-			SquaresOccupiedByMyself:      nil,
-			SquaresOccupiedByOtherPlayer: nil,
+			SquaresOccupiedByMyself:      squaresOccupiedByMyself,
+			SquaresOccupiedByOtherPlayer: squaresOccupiedByOtherPlayer,
 		}
-		WriteBoardToMoveSnapshot(&moveSnapshot, board, player)
 
-		tree := NewSearchTree(board, player)
+		tree := NewSearchTree(EvaluatePositionRandomly, board, player)
 		ApplyDirichletNoise(&tree)
 		for i := 0; i < numVisits; i++ {
-			DoVisit(&tree)
+			DoVisit(&tree, EvaluatePositionRandomly)
 		}
 
 		normalizedVisitCounts := make([]float32, 5*5)

@@ -27,9 +27,9 @@ func main() {
 		}
 
 		otherPlayer := hexit.OtherPlayer(player)
-		tree := hexit.NewSearchTree(board, otherPlayer)
+		tree := hexit.NewSearchTree(hexit.EvaluatePositionRandomly, board, otherPlayer)
 		for i := 0; i < 1000; i++ {
-			hexit.DoVisit(&tree)
+			hexit.DoVisit(&tree, hexit.EvaluatePositionRandomly)
 		}
 		bestMove := hexit.GetBestMove(&tree)
 		board = hexit.PlayMove(board, otherPlayer, bestMove.Row, bestMove.Col)

@@ -4,6 +4,7 @@ import (
 	"math"
 	"math/rand"
 
+	tf "github.com/tensorflow/tensorflow/tensorflow/go"
 	"gonum.org/v1/gonum/stat/distuv"
 )
 
@@ -58,7 +59,7 @@ func NewSearchNode(parent *SearchNode, move Move, player byte) SearchNode {
 }
 
 // NewSearchTree creates a new SearchTree
-func NewSearchTree(board Board, player byte) SearchTree {
+func NewSearchTree(evaluatePosition Evaluator, board Board, player byte) SearchTree {
 	if GetWinner(board) != 0 {
 		panic("Can't search from a terminal node")
 	}
@@ -68,7 +69,7 @@ func NewSearchTree(board Board, player byte) SearchTree {
 		board:    board,
 		rootNode: &rootNode,
 	}
-	EvaluateAtNode(searchTree.rootNode, board)
+	EvaluateAtNode(evaluatePosition, searchTree.rootNode, board)
 	return searchTree
 }
 
@@ -96,9 +97,10 @@ func ApplyDirichletNoise(newSearchTree *SearchTree) {
 	}
 }
 
-// EvaluatePosition returns the NN's value and policy estimates for a position.
-func EvaluatePosition(board Board) (float32, [5][5]float32) {
-	//TODO:should be deterministic
+type Evaluator = func(Board, byte) (float32, [5][5]float32)
+
+// EvaluatePositionRandomly returns random value and policy estimates for a position.
+func EvaluatePositionRandomly(board Board, player byte) (float32, [5][5]float32) {
 	valueEstimate := rand.Float32()*2 - 1
 	policyEstimates := [5][5]float32{}
 	for i := 0; i < 5; i++ {
@@ -109,13 +111,89 @@ func EvaluatePosition(board Board) (float32, [5][5]float32) {
 	return valueEstimate, policyEstimates
 }
 
+var model *tf.SavedModel
+
+func InitializeModel() {
+	if model == nil {
+		savedModel, err := tf.LoadSavedModel("hexit_saved_model", []string{"serve"}, nil)
+		if err != nil {
+			panic(err)
+		}
+		model = savedModel
+	}
+}
+
+func EvaluatePositionWithNN(board Board, player byte) (float32, [5][5]float32) {
+	if model == nil {
+		panic("Model not initialized")
+	}
+
+	squaresOccupiedByMyself, squaresOccupiedByOtherPlayer := GetOccupiedSquaresForNN(board, player)
+	boardInput := [][]float32{
+		append(squaresOccupiedByMyself, squaresOccupiedByOtherPlayer...),
+	}
+	boardInputTensor, err := tf.NewTensor(boardInput)
+	if err != nil {
+		panic(err)
+	}
+
+	boardInputOperation := model.Graph.Operation("boardInput")
+	policyOutputOperation := model.Graph.Operation("policyOutput/Softmax")
+	valueOutputOperation := model.Graph.Operation("valueOutput/Tanh")
+	if boardInputOperation == nil {
+		panic("boardInput operation not found")
+	}
+	if policyOutputOperation == nil {
+		panic("policyOutput operation not found")
+	}
+	if valueOutputOperation == nil {
+		panic("valueOutput operation not found")
+	}
+	result, err := model.Session.Run(
+		map[tf.Output]*tf.Tensor{
+			boardInputOperation.Output(0): boardInputTensor,
+		},
+		[]tf.Output{
+			policyOutputOperation.Output(0),
+			valueOutputOperation.Output(0),
+		},
+		nil,
+	)
+	if err != nil {
+		panic(err)
+	}
+
+	policyOutputs := result[0].Value().([][]float32)
+	valueOutputs := result[1].Value().([][]float32)
+
+	valueEstimate := float32(0.0)
+	if player == 1 {
+		valueEstimate = valueOutputs[0][0]
+	} else {
+		valueEstimate = -valueOutputs[0][0]
+	}
+
+	policyEstimates := [5][5]float32{}
+	for i := 0; i < 5; i++ {
+		for j := 0; j < 5; j++ {
+			if player == 1 {
+				policyEstimates[i][j] = policyOutputs[0][i*5+j]
+			} else {
+				policyEstimates[j][i] = policyOutputs[0][i*5+j]
+			}
+		}
+	}
+
+	return valueEstimate, policyEstimates
+}
+
 // EvaluateAtNode evaluates the NN at a single node.
-func EvaluateAtNode(node *SearchNode, board Board) {
+func EvaluateAtNode(evaluatePosition Evaluator, node *SearchNode, board Board) {
 	if node.isTerminal {
 		panic("Should not evaluate the NN at a terminal node")
 	}
 
-	valueEstimate, policyEstimates := EvaluatePosition(board)
+	valueEstimate, policyEstimates := evaluatePosition(board, node.player)
 	node.v = valueEstimate
 
 	firstChildNode := (*SearchNode)(nil)
@@ -156,7 +234,7 @@ func CalculateUctValue(node *SearchNode, numParentVisits uint) float32 {
 }
 
 // DoVisit performs one iteration of tree search.
-func DoVisit(tree *SearchTree) {
+func DoVisit(tree *SearchTree, evaluatePosition Evaluator) {
 	// Select a leaf node to visit
 	currentNode := tree.rootNode
 	currentBoard := tree.board
@@ -191,7 +269,7 @@ func DoVisit(tree *SearchTree) {
 		currentNode.isTerminal = true
 		currentNode.v = 1
 	} else {
-		EvaluateAtNode(currentNode, currentBoard)
+		EvaluateAtNode(evaluatePosition, currentNode, currentBoard)
 	}
 
 	// Back up the evaluated value
