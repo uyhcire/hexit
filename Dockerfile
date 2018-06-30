@@ -8,8 +8,6 @@ RUN ldconfig
 RUN go get github.com/tensorflow/tensorflow/tensorflow/go
 RUN go test github.com/tensorflow/tensorflow/tensorflow/go
 
-RUN curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-
 RUN apt-get update && apt-get install -y python3-pip python3-dev python-setuptools
 RUN easy_install -U pip
 RUN pip3 install --upgrade tensorflow
