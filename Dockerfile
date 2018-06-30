@@ -1,4 +1,4 @@
-FROM golang:1.9
+FROM golang:1.10
 
 ENV TF_TYPE cpu
 ENV TARGET_DIRECTORY /usr/local
