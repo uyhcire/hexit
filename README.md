@@ -1,5 +1,7 @@
 A simple AlphaGo-like AI for 5x5 [Hex](https://en.wikipedia.org/wiki/Hex_(board_game)), inspired by [Thinking Fast and Slow with Deep Learning and Tree Search](https://www.arxiv-vanity.com/papers/1705.08439/)
 
+I'm building this to teach myself about machine learning. If it works well I'll experiment with the search algorithm, like [this repo](https://github.com/Videodr0me/leela-chess-experimental) has been doing for chess.
+
 You can download training games and a trained model from [Google Drive](https://drive.google.com/drive/folders/1Q3zUscw3z6tTsOpR4WcFx1wbI11K8yLV?usp=sharing).
 
 If you want to try it out yourself, here's how:
