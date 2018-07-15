@@ -9,37 +9,93 @@ import (
 	"github.com/golang/protobuf/proto"
 )
 
+type moveSnapshotWithoutWinner struct {
+	normalizedVisitCounts        []float32
+	squaresOccupiedByMyself      []float32
+	squaresOccupiedByOtherPlayer []float32
+}
+
+type trainingGameBuilder struct {
+	moveSnapshots  []*moveSnapshotWithoutWinner
+	didSwitchSides bool
+}
+
+func newTrainingGameBuilder() trainingGameBuilder {
+	return trainingGameBuilder{
+		moveSnapshots:  make([]*moveSnapshotWithoutWinner, 0),
+		didSwitchSides: false,
+	}
+}
+
+func recordTrainingGameMove(builder *trainingGameBuilder, game Game, normalizedVisitCounts []float32) {
+	squaresOccupiedByMyself, squaresOccupiedByOtherPlayer := GetOccupiedSquaresForNN(game.Board, game.CurrentPlayer)
+	builder.moveSnapshots = append(builder.moveSnapshots, &moveSnapshotWithoutWinner{
+		normalizedVisitCounts:        normalizedVisitCounts,
+		squaresOccupiedByMyself:      squaresOccupiedByMyself,
+		squaresOccupiedByOtherPlayer: squaresOccupiedByOtherPlayer,
+	})
+}
+
+func recordTrainingGameSwitchedSides(builder *trainingGameBuilder) {
+	builder.didSwitchSides = true
+}
+
+func buildTrainingGame(builder *trainingGameBuilder, winner byte) TrainingGame {
+	moveSnapshots := make([]*TrainingGame_MoveSnapshot, 0)
+	player := byte(1)
+
+	for i, moveSnapshotWithoutWinner := range builder.moveSnapshots {
+		var trainingGameWinner TrainingGame_Player
+		originalPlayer := player
+		if i == 0 && builder.didSwitchSides {
+			originalPlayer = OtherPlayer(originalPlayer)
+		}
+		if originalPlayer == winner {
+			trainingGameWinner = TrainingGame_MYSELF
+		} else {
+			trainingGameWinner = TrainingGame_OTHER_PLAYER
+		}
+
+		moveSnapshots = append(moveSnapshots, &TrainingGame_MoveSnapshot{
+			NormalizedVisitCounts:        moveSnapshotWithoutWinner.normalizedVisitCounts,
+			Winner:                       trainingGameWinner,
+			SquaresOccupiedByMyself:      moveSnapshotWithoutWinner.squaresOccupiedByMyself,
+			SquaresOccupiedByOtherPlayer: moveSnapshotWithoutWinner.squaresOccupiedByOtherPlayer,
+		})
+
+		player = OtherPlayer(player)
+	}
+
+	return TrainingGame{MoveSnapshots: moveSnapshots}
+}
+
 var numVisits = 800
 
-func PlaySelfPlayGame(outputFilename string) {
+func playTrainingGame() TrainingGame {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	var err error
 	game := NewGame()
-
-	moveSnapshots := make([]*TrainingGame_MoveSnapshot, 0)
+	trainingGameBuilder := newTrainingGameBuilder()
 
 	for GetWinner(game.Board) == 0 {
-		if game.MoveNum == 2 {
-			err, game = DoNotSwitchSides(game)
-			if err != nil {
-				panic(err)
-			}
-			continue
-		}
-
-		squaresOccupiedByMyself, squaresOccupiedByOtherPlayer := GetOccupiedSquaresForNN(game.Board, game.CurrentPlayer)
-		moveSnapshot := TrainingGame_MoveSnapshot{
-			NormalizedVisitCounts:        nil,
-			Winner:                       TrainingGame_MYSELF,
-			SquaresOccupiedByMyself:      squaresOccupiedByMyself,
-			SquaresOccupiedByOtherPlayer: squaresOccupiedByOtherPlayer,
-		}
-
 		tree := NewSearchTree(EvaluatePositionRandomly, game)
 		ApplyDirichletNoise(&tree)
 		for i := 0; i < numVisits; i++ {
 			DoVisit(&tree, EvaluatePositionRandomly)
+		}
+
+		if game.MoveNum == 2 {
+			if GetExpectedValueOfGame(&tree) > 0 {
+				err, game = SwitchSides(game)
+				recordTrainingGameSwitchedSides(&trainingGameBuilder)
+			} else {
+				err, game = DoNotSwitchSides(game)
+			}
+			if err != nil {
+				panic(err)
+			}
+			continue
 		}
 
 		normalizedVisitCounts := make([]float32, 5*5)
@@ -50,31 +106,22 @@ func PlaySelfPlayGame(outputFilename string) {
 			}
 			normalizedVisitCounts[row*5+col] = float32(childNode.n) / float32(numVisits)
 		}
-		moveSnapshot.NormalizedVisitCounts = normalizedVisitCounts
+		recordTrainingGameMove(&trainingGameBuilder, game, normalizedVisitCounts)
 
 		move := GetMoveWithTemperatureOne(&tree)
 		err, game = PlayGameMove(game, move.Row, move.Col)
 		if err != nil {
 			panic(err)
 		}
-
-		moveSnapshots = append(moveSnapshots, &moveSnapshot)
 	}
 
 	winner := GetWinner(game.Board)
+	return buildTrainingGame(&trainingGameBuilder, winner)
+}
 
-	// Fill in move snapshots with the winner
-	player := byte(1)
-	for _, moveSnapshot := range moveSnapshots {
-		if player == winner {
-			moveSnapshot.Winner = TrainingGame_MYSELF
-		} else {
-			moveSnapshot.Winner = TrainingGame_OTHER_PLAYER
-		}
-		player = OtherPlayer(player)
-	}
+func GenerateTrainingGame(outputFilename string) {
+	trainingGame := playTrainingGame()
 
-	trainingGame := TrainingGame{MoveSnapshots: moveSnapshots}
 	trainingGameBytes, err := proto.Marshal(&trainingGame)
 	if err != nil {
 		panic(err)

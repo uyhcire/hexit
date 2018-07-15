@@ -10,6 +10,6 @@ func main() {
 	for i := 0; i < 1000; i++ {
 		fmt.Printf("Played %d games\n", i)
 		outputFilename := fmt.Sprintf("%d", i)
-		hexit.PlaySelfPlayGame(outputFilename)
+		hexit.GenerateTrainingGame(outputFilename)
 	}
 }
