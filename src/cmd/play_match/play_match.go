@@ -9,31 +9,40 @@ import (
 )
 
 func playMatchGame() byte {
-	board := hexit.NewBoard()
-	player := byte(1)
-	for hexit.GetWinner(board) == 0 {
-		hexit.PrintBoard(&board)
+	var err error
+	game := hexit.NewGame()
+	for hexit.GetWinner(game.Board) == 0 {
+		if game.MoveNum == 2 {
+			err, game = hexit.DoNotSwitchSides(game)
+			if err != nil {
+				panic(err)
+			}
+			continue
+		}
+
+		hexit.PrintBoard(&game.Board)
 		fmt.Println("")
 		var evaluatePosition hexit.Evaluator
-		if player == 1 {
+		if hexit.GetOriginalPlayer(game) == 1 {
 			evaluatePosition = hexit.EvaluatePositionRandomly
 		} else {
 			evaluatePosition = hexit.EvaluatePositionWithNN
 		}
 
-		tree := hexit.NewSearchTree(evaluatePosition, board, player)
+		tree := hexit.NewSearchTree(evaluatePosition, game.Board, game.CurrentPlayer)
 		for i := 0; i < 1000; i++ {
 			hexit.DoVisit(&tree, evaluatePosition)
 		}
 		bestMove := hexit.GetBestMove(&tree)
-		board = hexit.PlayMove(board, player, bestMove.Row, bestMove.Col)
-
-		player = hexit.OtherPlayer(player)
+		err, game = hexit.PlayGameMove(game, bestMove.Row, bestMove.Col)
+		if err != nil {
+			panic(err)
+		}
 
 		time.Sleep(time.Second)
 	}
 
-	winner := hexit.GetWinner(board)
+	winner := hexit.GetWinner(game.Board)
 	fmt.Printf("Player %d wins!\n", winner)
 	return winner
 }

@@ -14,13 +14,21 @@ var numVisits = 800
 func PlaySelfPlayGame(outputFilename string) {
 	rand.Seed(time.Now().UTC().UnixNano())
 
-	board := NewBoard()
-	player := byte(1)
+	var err error
+	game := NewGame()
 
 	moveSnapshots := make([]*TrainingGame_MoveSnapshot, 0)
 
-	for GetWinner(board) == 0 {
-		squaresOccupiedByMyself, squaresOccupiedByOtherPlayer := GetOccupiedSquaresForNN(board, player)
+	for GetWinner(game.Board) == 0 {
+		if game.MoveNum == 2 {
+			err, game = DoNotSwitchSides(game)
+			if err != nil {
+				panic(err)
+			}
+			continue
+		}
+
+		squaresOccupiedByMyself, squaresOccupiedByOtherPlayer := GetOccupiedSquaresForNN(game.Board, game.CurrentPlayer)
 		moveSnapshot := TrainingGame_MoveSnapshot{
 			NormalizedVisitCounts:        nil,
 			Winner:                       TrainingGame_MYSELF,
@@ -28,7 +36,7 @@ func PlaySelfPlayGame(outputFilename string) {
 			SquaresOccupiedByOtherPlayer: squaresOccupiedByOtherPlayer,
 		}
 
-		tree := NewSearchTree(EvaluatePositionRandomly, board, player)
+		tree := NewSearchTree(EvaluatePositionRandomly, game.Board, game.CurrentPlayer)
 		ApplyDirichletNoise(&tree)
 		for i := 0; i < numVisits; i++ {
 			DoVisit(&tree, EvaluatePositionRandomly)
@@ -37,7 +45,7 @@ func PlaySelfPlayGame(outputFilename string) {
 		normalizedVisitCounts := make([]float32, 5*5)
 		for childNode := tree.rootNode.firstChild; childNode != nil; childNode = childNode.nextSibling {
 			row, col := childNode.move.Row, childNode.move.Col
-			if board[row][col] != 0 {
+			if game.Board[row][col] != 0 {
 				panic("Illegal move")
 			}
 			normalizedVisitCounts[row*5+col] = float32(childNode.n) / float32(numVisits)
@@ -45,17 +53,18 @@ func PlaySelfPlayGame(outputFilename string) {
 		moveSnapshot.NormalizedVisitCounts = normalizedVisitCounts
 
 		move := GetMoveWithTemperatureOne(&tree)
-		board = PlayMove(board, player, move.Row, move.Col)
+		err, game = PlayGameMove(game, move.Row, move.Col)
+		if err != nil {
+			panic(err)
+		}
 
 		moveSnapshots = append(moveSnapshots, &moveSnapshot)
-
-		player = OtherPlayer(player)
 	}
 
-	winner := GetWinner(board)
+	winner := GetWinner(game.Board)
 
 	// Fill in move snapshots with the winner
-	player = 1
+	player := byte(1)
 	for _, moveSnapshot := range moveSnapshots {
 		if player == winner {
 			moveSnapshot.Winner = TrainingGame_MYSELF
