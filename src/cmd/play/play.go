@@ -38,7 +38,7 @@ func main() {
 				continue
 			}
 		} else {
-			tree := hexit.NewSearchTree(hexit.EvaluatePositionRandomly, game.Board, game.CurrentPlayer)
+			tree := hexit.NewSearchTree(hexit.EvaluatePositionRandomly, game)
 			for i := 0; i < 1000; i++ {
 				hexit.DoVisit(&tree, hexit.EvaluatePositionRandomly)
 			}

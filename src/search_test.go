@@ -6,17 +6,20 @@ import (
 )
 
 func TestNewSearchTree(t *testing.T) {
-	board := NewBoard()
-	tree := NewSearchTree(EvaluatePositionRandomly, board, 1)
+	game := NewGame()
+	tree := NewSearchTree(EvaluatePositionRandomly, game)
 	if tree.rootNode.firstChild == nil {
 		t.Error("Root node should have children attached!")
 	}
 }
 
 func TestNumLegalMoves(t *testing.T) {
-	board := NewBoard()
-	board = PlayMove(board, 1, 0, 0)
-	tree := NewSearchTree(EvaluatePositionRandomly, board, 2)
+	game := NewGame()
+	err, game := PlayGameMove(game, 0, 0)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	tree := NewSearchTree(EvaluatePositionRandomly, game)
 
 	numLegalMoves := 0
 	for childNode := tree.rootNode.firstChild; childNode != nil; childNode = childNode.nextSibling {
@@ -29,7 +32,9 @@ func TestNumLegalMoves(t *testing.T) {
 }
 
 func TestDoVisit(t *testing.T) {
-	almostWonBoard := [5][5]byte{
+	game := NewGame()
+	// Player 1 can win by playing at (4, 0)
+	game.Board = [5][5]byte{
 		[5]byte{1, 0, 0, 0, 0},
 		[5]byte{1, 0, 0, 0, 0},
 		[5]byte{1, 0, 0, 0, 0},
@@ -39,7 +44,7 @@ func TestDoVisit(t *testing.T) {
 
 	rand.Seed(1)
 
-	tree := NewSearchTree(EvaluatePositionRandomly, almostWonBoard, 1)
+	tree := NewSearchTree(EvaluatePositionRandomly, game)
 	for i := 0; i < 1000; i++ {
 		DoVisit(&tree, EvaluatePositionRandomly)
 	}
@@ -59,7 +64,9 @@ func TestDoVisit(t *testing.T) {
 }
 
 func TestGetBestMovePlayerOne(t *testing.T) {
-	almostWonBoard := [5][5]byte{
+	game := NewGame()
+	// Player 1 can win by playing at (4, 0)
+	game.Board = [5][5]byte{
 		[5]byte{1, 0, 0, 0, 0},
 		[5]byte{1, 0, 0, 0, 0},
 		[5]byte{1, 0, 0, 0, 0},
@@ -69,7 +76,7 @@ func TestGetBestMovePlayerOne(t *testing.T) {
 
 	rand.Seed(1)
 
-	tree := NewSearchTree(EvaluatePositionRandomly, almostWonBoard, 1)
+	tree := NewSearchTree(EvaluatePositionRandomly, game)
 	for i := 0; i < 1000; i++ {
 		DoVisit(&tree, EvaluatePositionRandomly)
 	}
@@ -81,7 +88,10 @@ func TestGetBestMovePlayerOne(t *testing.T) {
 }
 
 func TestGetBestMovePlayerTwo(t *testing.T) {
-	almostWonBoard := [5][5]byte{
+	game := NewGame()
+	// Player 2 can win by playing at (0, 4)
+	game.CurrentPlayer = 2
+	game.Board = [5][5]byte{
 		[5]byte{2, 2, 2, 2, 0},
 		[5]byte{0, 0, 0, 0, 0},
 		[5]byte{0, 0, 0, 0, 0},
@@ -91,7 +101,7 @@ func TestGetBestMovePlayerTwo(t *testing.T) {
 
 	rand.Seed(1)
 
-	tree := NewSearchTree(EvaluatePositionRandomly, almostWonBoard, 2)
+	tree := NewSearchTree(EvaluatePositionRandomly, game)
 	for i := 0; i < 1000; i++ {
 		DoVisit(&tree, EvaluatePositionRandomly)
 	}

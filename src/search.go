@@ -12,9 +12,6 @@ import (
 type SearchNode struct {
 	// Move that led to this node
 	move Move
-	// Player that moves next
-	player byte
-
 	// Total number of visits
 	n uint32
 	// Value estimate from NN
@@ -36,16 +33,15 @@ type SearchNode struct {
 
 // SearchTree is an MCTS search tree
 type SearchTree struct {
-	board    Board
+	game     Game
 	rootNode *SearchNode
 }
 
 // NewSearchNode creates a new SearchNode
-func NewSearchNode(parent *SearchNode, move Move, player byte) SearchNode {
+func NewSearchNode(parent *SearchNode, move Move) SearchNode {
 	nan := float32(math.NaN())
 	return SearchNode{
 		move:        move,
-		player:      player,
 		n:           0,
 		v:           nan,
 		q:           0,
@@ -59,17 +55,17 @@ func NewSearchNode(parent *SearchNode, move Move, player byte) SearchNode {
 }
 
 // NewSearchTree creates a new SearchTree
-func NewSearchTree(evaluatePosition Evaluator, board Board, player byte) SearchTree {
-	if GetWinner(board) != 0 {
+func NewSearchTree(evaluatePosition Evaluator, game Game) SearchTree {
+	if GetWinner(game.Board) != 0 {
 		panic("Can't search from a terminal node")
 	}
 
-	rootNode := NewSearchNode(nil, Move{Row: 1000, Col: 1000}, player)
+	rootNode := NewSearchNode(nil, Move{Row: 1000, Col: 1000})
 	searchTree := SearchTree{
-		board:    board,
+		game:     game,
 		rootNode: &rootNode,
 	}
-	EvaluateAtNode(evaluatePosition, searchTree.rootNode, board)
+	EvaluateAtNode(evaluatePosition, searchTree.rootNode, game)
 	return searchTree
 }
 
@@ -188,24 +184,24 @@ func EvaluatePositionWithNN(board Board, player byte) (float32, [5][5]float32) {
 }
 
 // EvaluateAtNode evaluates the NN at a single node.
-func EvaluateAtNode(evaluatePosition Evaluator, node *SearchNode, board Board) {
+func EvaluateAtNode(evaluatePosition Evaluator, node *SearchNode, game Game) {
 	if node.isTerminal {
 		panic("Should not evaluate the NN at a terminal node")
 	}
 
-	valueEstimate, policyEstimates := evaluatePosition(board, node.player)
+	valueEstimate, policyEstimates := evaluatePosition(game.Board, game.CurrentPlayer)
 	node.v = valueEstimate
 
 	firstChildNode := (*SearchNode)(nil)
 	totalLegalPolicy := float32(0.0)
 	for i := 0; i < 5; i++ {
 		for j := 0; j < 5; j++ {
-			if board[i][j] != 0 {
+			if game.Board[i][j] != 0 {
 				// Illegal move
 				continue
 			}
 			totalLegalPolicy += policyEstimates[i][j]
-			childNode := NewSearchNode(node, Move{Row: uint(i), Col: uint(j)}, OtherPlayer(node.player))
+			childNode := NewSearchNode(node, Move{Row: uint(i), Col: uint(j)})
 			childNode.p = policyEstimates[i][j]
 			childNode.nextSibling = firstChildNode
 			firstChildNode = &childNode
@@ -237,7 +233,8 @@ func CalculateUctValue(node *SearchNode, numParentVisits uint) float32 {
 func DoVisit(tree *SearchTree, evaluatePosition Evaluator) {
 	// Select a leaf node to visit
 	currentNode := tree.rootNode
-	currentBoard := tree.board
+	currentGame := tree.game
+	var err error
 	for currentNode.firstChild != nil {
 		// While we're not at a leaf node:
 		bestCandidateNode := (*SearchNode)(nil)
@@ -255,21 +252,26 @@ func DoVisit(tree *SearchTree, evaluatePosition Evaluator) {
 			candidateNode = candidateNode.nextSibling
 		}
 		currentNode = bestCandidateNode
-		currentBoard = PlayMove(
-			currentBoard,
-			// Previous player
-			OtherPlayer(currentNode.player),
-			bestCandidateNode.move.Row,
-			bestCandidateNode.move.Col)
+		// Skip the side-switching move
+		if currentGame.MoveNum == 2 {
+			err, currentGame = DoNotSwitchSides(currentGame)
+			if err != nil {
+				panic(err)
+			}
+		}
+		err, currentGame = PlayGameMove(currentGame, bestCandidateNode.move.Row, bestCandidateNode.move.Col)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	// Expand the selected leaf node
-	winner := GetWinner(currentBoard)
+	winner := GetWinner(currentGame.Board)
 	if winner != 0 {
 		currentNode.isTerminal = true
 		currentNode.v = 1
 	} else {
-		EvaluateAtNode(evaluatePosition, currentNode, currentBoard)
+		EvaluateAtNode(evaluatePosition, currentNode, currentGame)
 	}
 
 	// Back up the evaluated value

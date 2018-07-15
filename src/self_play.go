@@ -36,7 +36,7 @@ func PlaySelfPlayGame(outputFilename string) {
 			SquaresOccupiedByOtherPlayer: squaresOccupiedByOtherPlayer,
 		}
 
-		tree := NewSearchTree(EvaluatePositionRandomly, game.Board, game.CurrentPlayer)
+		tree := NewSearchTree(EvaluatePositionRandomly, game)
 		ApplyDirichletNoise(&tree)
 		for i := 0; i < numVisits; i++ {
 			DoVisit(&tree, EvaluatePositionRandomly)

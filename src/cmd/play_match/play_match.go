@@ -29,7 +29,7 @@ func playMatchGame() byte {
 			evaluatePosition = hexit.EvaluatePositionWithNN
 		}
 
-		tree := hexit.NewSearchTree(evaluatePosition, game.Board, game.CurrentPlayer)
+		tree := hexit.NewSearchTree(evaluatePosition, game)
 		for i := 0; i < 1000; i++ {
 			hexit.DoVisit(&tree, evaluatePosition)
 		}
