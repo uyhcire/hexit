@@ -32,14 +32,36 @@ func TestSwitchSides(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	if game.CurrentPlayer != 1 {
-		t.Error("If Player 2 switched sides, they should now be playing as Player 1")
+	if game.CurrentPlayer != 2 {
+		t.Error("If Player 2 switched sides, the next move should be Player 1 playing as Player 2")
 	}
 	if game.MoveNum != 3 {
 		t.Error("Switching sides should count as a move")
 	}
 	if game.SwitchedSides != true {
 		t.Error("Expected to switch sides!")
+	}
+}
+
+func TestAlternatingColorsAfterSwitchingSides(t *testing.T) {
+	game := NewGame()
+	err, game := PlayGameMove(game, 0, 0)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	err, game = SwitchSides(game)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	err, game = PlayGameMove(game, 0, 1)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if game.Board[0][0] != 1 || game.Board[0][1] != 2 {
+		t.Error("Players should alternate between colors even if sides were switched")
 	}
 }
 
@@ -78,7 +100,7 @@ func TestGetOriginalPlayer(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	if GetOriginalPlayer(game) != 2 {
-		t.Error("Original player should be Player 2 even if they decided to switch sides")
+	if GetOriginalPlayer(game) != 1 || game.CurrentPlayer != 2 {
+		t.Error("The original Player 1 is playing as Player 2")
 	}
 }

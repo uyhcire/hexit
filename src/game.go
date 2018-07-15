@@ -44,7 +44,7 @@ func SwitchSides(game Game) (error, Game) {
 	}
 
 	return nil, Game{
-		CurrentPlayer: OtherPlayer(game.CurrentPlayer),
+		CurrentPlayer: game.CurrentPlayer,
 		MoveNum:       game.MoveNum + 1,
 		SwitchedSides: true,
 		Board:         game.Board,
@@ -53,7 +53,6 @@ func SwitchSides(game Game) (error, Game) {
 
 // DoNotSwitchSides: Player 2 decided not to switch sides
 func DoNotSwitchSides(game Game) (error, Game) {
-
 	if game.MoveNum != 2 {
 		return errors.New("Can only switch sides on move 2"), game
 	}
