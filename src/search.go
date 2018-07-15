@@ -107,6 +107,18 @@ func EvaluatePositionRandomly(board Board, player byte) (float32, [5][5]float32)
 	return valueEstimate, policyEstimates
 }
 
+// EvaluatePositionUniformly returns the same value and policy estimates for every position
+func EvaluatePositionUniformly(board Board, player byte) (float32, [5][5]float32) {
+	valueEstimate := float32(0)
+	policyEstimates := [5][5]float32{}
+	for i := 0; i < 5; i++ {
+		for j := 0; j < 5; j++ {
+			policyEstimates[i][j] = 1.0 / (5 * 5)
+		}
+	}
+	return valueEstimate, policyEstimates
+}
+
 var model *tf.SavedModel
 
 func InitializeModel() {
@@ -219,14 +231,28 @@ func EvaluateAtNode(evaluatePosition Evaluator, node *SearchNode, game Game) {
 	node.firstChild = firstChildNode
 }
 
-// CalculateUctValue computes the priority of a node for exploration.
+func calculateUctU(node *SearchNode, numParentVisits uint) float32 {
+	cpuct := float32(1.2)
+	return cpuct * node.p * float32(
+		math.Sqrt(float64(numParentVisits)/
+			float64(1.0+node.n)))
+}
+
+// CalculateUctValue computes the priority of a node for exploration (Q+U).
 // Nodes with higher values should be explored first.
 func CalculateUctValue(node *SearchNode, numParentVisits uint) float32 {
-	cpuct := float32(1.2)
-	return node.q +
-		cpuct*node.p*float32(
-			math.Sqrt(float64(numParentVisits)/
-				float64(1.0+node.n)))
+	return node.q + calculateUctU(node, numParentVisits)
+}
+
+// CalculateFirstMoveUctValue is like CalculateUctValue, but for the very first move.
+// The first move should be as close to equal as possible, so instead of Q+U, use U-abs(Q).
+func CalculateFirstMoveUctValue(node *SearchNode, numParentVisits uint) float32 {
+	if node.isTerminal {
+		// If the move wins the game, Player 2 can't switch sides.
+		// To make sure Player 1 plays the winning move, use the usual UCT value (Q+U)
+		return CalculateUctValue(node, numParentVisits)
+	}
+	return calculateUctU(node, numParentVisits) - float32(math.Abs(float64(node.q)))
 }
 
 // DoVisit performs one iteration of tree search.
@@ -241,7 +267,12 @@ func DoVisit(tree *SearchTree, evaluatePosition Evaluator) {
 		bestUctValue := float32(math.Inf(-1))
 		candidateNode := currentNode.firstChild
 		for candidateNode != nil {
-			uctValue := CalculateUctValue(candidateNode, uint(currentNode.n))
+			var uctValue float32
+			if currentGame.MoveNum == 1 {
+				uctValue = CalculateFirstMoveUctValue(candidateNode, uint(currentNode.n))
+			} else {
+				uctValue = CalculateUctValue(candidateNode, uint(currentNode.n))
+			}
 			if math.IsNaN(float64(uctValue)) {
 				panic("UCT value should not be NaN")
 			}
@@ -321,4 +352,34 @@ func GetMoveWithTemperatureOne(tree *SearchTree) Move {
 		}
 	}
 	panic("Expected to pick a move")
+}
+
+// GetExpectedValueOfGame gets the expected value of the game.
+// It's +1 if Player 1 will win, and -1 if Player 2 will win.
+func GetExpectedValueOfGame(tree *SearchTree) float32 {
+	if tree.game.MoveNum == 1 {
+		// Player 2 can switch sides
+		totalVisits := 0
+		totalAdjustedQ := float32(0)
+		for childNode := tree.rootNode.firstChild; childNode != nil; childNode = childNode.nextSibling {
+			totalVisits += int(childNode.n)
+			q := childNode.q
+			if !childNode.isTerminal {
+				q = float32(-math.Abs(float64(q)))
+			}
+			totalAdjustedQ += float32(childNode.n) * q
+		}
+		return totalAdjustedQ / float32(totalVisits)
+	} else if tree.game.MoveNum == 2 {
+		return float32(
+			// We can switch sides if the root node's Q is unfavorable
+			-math.Abs(float64(tree.rootNode.q)),
+		)
+	} else if tree.game.CurrentPlayer == 1 {
+		return -tree.rootNode.q
+	} else if tree.game.CurrentPlayer == 2 {
+		return +tree.rootNode.q
+	} else {
+		panic("unreachable")
+	}
 }
