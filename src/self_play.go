@@ -86,7 +86,7 @@ func playTrainingGame() TrainingGame {
 		}
 
 		if game.MoveNum == 2 {
-			if GetExpectedValueOfGame(&tree) > 0 {
+			if ShouldSwitchSides(&tree) {
 				err, game = SwitchSides(game)
 				recordTrainingGameSwitchedSides(&trainingGameBuilder)
 			} else {
@@ -95,7 +95,6 @@ func playTrainingGame() TrainingGame {
 			if err != nil {
 				panic(err)
 			}
-			continue
 		}
 
 		normalizedVisitCounts := make([]float32, 5*5)

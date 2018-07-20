@@ -12,14 +12,6 @@ func playMatchGame() byte {
 	var err error
 	game := hexit.NewGame()
 	for hexit.GetWinner(game.Board) == 0 {
-		if game.MoveNum == 2 {
-			err, game = hexit.DoNotSwitchSides(game)
-			if err != nil {
-				panic(err)
-			}
-			continue
-		}
-
 		hexit.PrintBoard(&game.Board)
 		fmt.Println("")
 		var evaluatePosition hexit.Evaluator
@@ -33,6 +25,17 @@ func playMatchGame() byte {
 		for i := 0; i < 1000; i++ {
 			hexit.DoVisit(&tree, evaluatePosition)
 		}
+		if game.MoveNum == 2 {
+			if hexit.ShouldSwitchSides(&tree) {
+				err, game = hexit.SwitchSides(game)
+				fmt.Println("Player 2 switched sides!")
+			} else {
+				err, game = hexit.DoNotSwitchSides(game)
+			}
+			if err != nil {
+				panic(err)
+			}
+		}
 		bestMove := hexit.GetBestMove(&tree)
 		err, game = hexit.PlayGameMove(game, bestMove.Row, bestMove.Col)
 		if err != nil {
@@ -43,6 +46,9 @@ func playMatchGame() byte {
 	}
 
 	winner := hexit.GetWinner(game.Board)
+	if game.SwitchedSides {
+		winner = hexit.OtherPlayer(winner)
+	}
 	fmt.Printf("Player %d wins!\n", winner)
 	return winner
 }

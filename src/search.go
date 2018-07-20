@@ -383,3 +383,10 @@ func GetExpectedValueOfGame(tree *SearchTree) float32 {
 		panic("unreachable")
 	}
 }
+
+func ShouldSwitchSides(tree *SearchTree) bool {
+	if tree.game.MoveNum != 2 {
+		panic("Can only switch sides on move 2")
+	}
+	return tree.rootNode.q > 0
+}
