@@ -16,13 +16,13 @@ func playMatchGame() byte {
 		fmt.Println("")
 		var evaluatePosition hexit.Evaluator
 		if hexit.GetOriginalPlayer(game) == 1 {
-			evaluatePosition = hexit.EvaluatePositionRandomly
+			evaluatePosition = hexit.EvaluatePositionWithNN
 		} else {
 			evaluatePosition = hexit.EvaluatePositionWithNN
 		}
 
 		tree := hexit.NewSearchTree(evaluatePosition, game)
-		for i := 0; i < 1000; i++ {
+		for i := 0; i < 100; i++ {
 			hexit.DoVisit(&tree, evaluatePosition)
 		}
 		if game.MoveNum == 2 {
@@ -36,13 +36,18 @@ func playMatchGame() byte {
 				panic(err)
 			}
 		}
-		bestMove := hexit.GetBestMove(&tree)
+
+		var bestMove hexit.Move
+		if game.MoveNum == 1 || game.MoveNum == 3 {
+			bestMove = hexit.GetMoveWithTemperatureOne(&tree)
+		} else {
+			bestMove = hexit.GetBestMove(&tree)
+		}
+
 		err, game = hexit.PlayGameMove(game, bestMove.Row, bestMove.Col)
 		if err != nil {
 			panic(err)
 		}
-
-		time.Sleep(time.Second)
 	}
 
 	winner := hexit.GetWinner(game.Board)
@@ -59,7 +64,7 @@ func main() {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	playerTwoWinCount := 0
-	for i := 0; i < 100; i++ {
+	for i := 0; i < 1000; i++ {
 		winner := playMatchGame()
 		if winner == 2 {
 			playerTwoWinCount++
